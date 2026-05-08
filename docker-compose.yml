@@ -1,0 +1,97 @@
+version: "3.9"
+
+# ── Services ───────────────────────────────────────────────────────────────────
+services:
+
+  # ── SQL Server Express 2022 ─────────────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      # Accept the EULA (required by Microsoft)
+      ACCEPT_EULA: "Y"
+      # SA password — override with: MSSQL_SA_PASSWORD=<strong-pwd> docker compose up
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Password123}
+      # Express edition is free; change to Developer or Standard as needed
+      MSSQL_PID: Express
+    ports:
+      # Expose 1433 to the host for SQL clients (SSMS / Azure Data Studio)
+      - "1433:1433"
+    volumes:
+      # Named volume keeps database files across container restarts
+      - sqldata:/var/opt/mssql
+    networks:
+      - app-network
+    healthcheck:
+      # Wait until SQL Server is accepting connections before starting the API
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-YourStrong@Password123}' -Q 'SELECT 1' -b -No -l 5 || exit 1"
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Products API (.NET 8) ───────────────────────────────────────────────────
+  products-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: products-api
+    ports:
+      # Map host port 5000 → container port 8080
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Override the connection string — "sqlserver" resolves via Docker DNS to the
+      # sqlserver container on the shared app-network
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ProductsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-YourStrong@Password123};TrustServerCertificate=True;"
+      # Override the API key — double-underscore maps to ApiSettings:ApiKey in .NET config
+      ApiSettings__ApiKey: ${API_KEY:-my-super-secret-api-key-12345}
+      # Point Serilog's Seq sink at the seq container on the shared network.
+      # Overrides the "serverUrl" arg of WriteTo[1] (Seq) in appsettings.json.
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:80
+    depends_on:
+      sqlserver:
+        # Do not start the API until SQL Server reports healthy
+        condition: service_healthy
+      seq:
+        # Seq has no healthcheck; service_started is sufficient
+        condition: service_started
+    networks:
+      - app-network
+    restart: on-failure
+
+  # ── Seq — structured log aggregation UI ────────────────────────────────────
+  # All products-api container instances send structured JSON logs here over HTTP.
+  # Access the Seq UI at http://localhost:5341 (no authentication in dev mode).
+  # Filter logs by SourceContext, MachineName (container hostname), Level, etc.
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    ports:
+      # Seq web UI + ingestion endpoint
+      - "5341:80"
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      # Named volume persists Seq's event store across container restarts
+      - seqdata:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# ── Volumes ────────────────────────────────────────────────────────────────────
+volumes:
+  sqldata:
+    driver: local
+  # Seq event store — persists structured log data across container restarts
+  seqdata:
+    driver: local
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,55 @@
+## .NET / C# gitignore
+
+# Build outputs
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# User-specific files
+*.rsuser
+
+# Publish output
+publish/
+out/
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# EF Core migrations lock (keep migration files themselves)
+# Uncomment if you want to ignore auto-generated migration snapshots:
+# **/Migrations/*
+
+# Environment / secrets (never commit these)
+appsettings.*.json
+!appsettings.json
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.dockerignore
