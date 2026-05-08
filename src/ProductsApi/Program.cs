@@ -95,14 +95,37 @@ app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapControllers();
 
-// ── Database initialisation ───────────────────────────────────────────────────
+// ── Database initialisation & seeding ───────────────────────────────────────
 // EnsureCreated creates the schema on first run if it does not already exist.
-// For production migrations, replace with db.Database.Migrate() and include
-// EF migration files generated via: dotnet ef migrations add InitialCreate
+// Seeding runs only when the Products table is empty so it is safe to call on
+// every startup — restarting the container will NOT re-insert duplicate rows.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    // Create schema if it does not already exist
     db.Database.EnsureCreated();
+
+    // Seed default products only when the table is completely empty
+    if (!db.Products.Any())
+    {
+        logger.LogInformation("Seeding default products into the database...");
+
+        db.Products.AddRange(
+            new ProductsApi.Models.Product { Name = "Laptop Pro 15", Price = 1299.99m, Stock = 25 },
+            new ProductsApi.Models.Product { Name = "Wireless Mouse", Price = 29.99m, Stock = 150 },
+            new ProductsApi.Models.Product { Name = "Mechanical Keyboard", Price = 89.99m, Stock = 75 },
+            new ProductsApi.Models.Product { Name = "4K Monitor 27inch", Price = 449.99m, Stock = 30 },
+            new ProductsApi.Models.Product { Name = "USB-C Hub 7-in-1", Price = 49.99m, Stock = 200 },
+            new ProductsApi.Models.Product { Name = "Webcam 1080p", Price = 69.99m, Stock = 60 },
+            new ProductsApi.Models.Product { Name = "Noise-Cancelling Headphones", Price = 199.99m, Stock = 40 },
+            new ProductsApi.Models.Product { Name = "External SSD 1TB", Price = 109.99m, Stock = 90 }
+        );
+
+        db.SaveChanges();
+        logger.LogInformation("Seeded {Count} products successfully.", db.Products.Count());
+    }
 }
 
 app.Run();

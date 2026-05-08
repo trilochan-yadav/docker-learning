@@ -7,6 +7,13 @@ services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
+    # SQL Server requires at least 2 GB RAM to start.
+    # This limit prevents it from starving the other containers (important in
+    # resource-constrained environments like GitHub Codespaces free tier).
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     environment:
       # Accept the EULA (required by Microsoft)
       ACCEPT_EULA: "Y"
