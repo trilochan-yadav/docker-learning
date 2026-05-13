@@ -2,6 +2,10 @@
 
 A containerized **.NET 8 REST API** for Products CRUD and stock management, backed by **SQL Server Express 2022**, orchestrated with **Docker Compose**.
 
+## ✅ Docker Hub Repository
+
+https://hub.docker.com/r/trilochanrao/products-api
+
 ---
 
 ## Table of Contents
@@ -11,11 +15,12 @@ A containerized **.NET 8 REST API** for Products CRUD and stock management, back
 3. [Prerequisites](#prerequisites)
 4. [Quick Start — Docker Desktop](#quick-start--docker-desktop)
 5. [GitHub Codespaces / Docker-in-Docker](#github-codespaces--docker-in-docker-dind)
-6. [Environment Variables](#environment-variables)
-7. [API Endpoints](#api-endpoints)
-8. [Authentication](#authentication)
-9. [Docker Command Cheatsheet](#docker-command-cheatsheet)
-10. [Docker Hub — Push & Pull](#docker-hub--push--pull)
+6. [CI/CD Pipeline](#cicd-pipeline)
+7. [Environment Variables](#environment-variables)
+8. [API Endpoints](#api-endpoints)
+9. [Authentication](#authentication)
+10. [Docker Command Cheatsheet](#docker-command-cheatsheet)
+11. [Docker Hub — Push & Pull](#docker-hub--push--pull)
 
 ---
 
@@ -51,6 +56,9 @@ Docker Assignment/
 ├── .dockerignore
 ├── .gitignore
 ├── docker-compose.yml                          # Multi-container orchestration
+├── .github/
+│   └── workflows/
+│       └── docker.yml                         # CI/CD pipeline
 └── docs/
     └── architecture.md                         # Detailed architecture diagrams
 ```
@@ -98,7 +106,7 @@ HTTP Request
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/docker-basic-assignment.git
+git clone https://github.com/trilochan-yadav/docker-learning.git
 cd "docker-basic-assignment"
 ```
 
@@ -196,6 +204,32 @@ Then reference them in the terminal:
 ```bash
 API_KEY=$API_KEY MSSQL_SA_PASSWORD=$MSSQL_SA_PASSWORD docker compose up --build -d
 ```
+
+---
+
+## CI/CD Pipeline
+
+This project uses GitHub Actions.
+
+Workflow file:
+
+```
+.github/workflows/docker.yml
+```
+
+### Steps
+
+- Build Docker image  
+- Tag image (`latest` + commit SHA)  
+- Login to Docker Hub  
+- Push image  
+
+This pipeline automates build and deployment of Docker images on every push.
+
+### Secrets
+
+- DOCKER_USERNAME  
+- DOCKER_PASSWORD  
 
 ---
 
@@ -373,17 +407,17 @@ docker network inspect app-network   # inspect the bridge network
 docker login
 
 # 2. Tag the local image with your Docker Hub username
-docker tag products-api:latest <your-dockerhub-username>/products-api:latest
+docker tag products-api:latest trilochanrao/products-api:latest
 
 # 3. Push to Docker Hub
-docker push <your-dockerhub-username>/products-api:latest
+docker push trilochanrao/products-api:latest
 ```
 
 ### Pull and run from Docker Hub
 
 ```bash
 # Pull the image
-docker pull <your-dockerhub-username>/products-api:latest
+docker pull trilochanrao/products-api:latest
 
 # Run it (requires a SQL Server instance reachable at sqlserver:1433,
 # or override the connection string)
@@ -392,7 +426,7 @@ docker run -d \
   -e ConnectionStrings__DefaultConnection="Server=<host>,1433;Database=ProductsDb;User Id=sa;Password=<pwd>;TrustServerCertificate=True;" \
   -e ApiSettings__ApiKey="my-super-secret-api-key-12345" \
   --name products-api \
-  <your-dockerhub-username>/products-api:latest
+  trilochanrao/products-api:latest
 ```
 
 ### Use the Hub image in docker-compose.yml
@@ -401,7 +435,7 @@ Replace the `build:` block in `docker-compose.yml` with:
 
 ```yaml
 products-api:
-  image: <your-dockerhub-username>/products-api:latest
+  image: trilochanrao/products-api:latest
   # remove the build: section
 ```
 

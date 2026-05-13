@@ -43,9 +43,7 @@ services:
 
   # ── Products API (.NET 8) ───────────────────────────────────────────────────
   products-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: trilochanrao/products-api:latest
     ports:
       # Map host port 5000 → container port 8080
       - "5000-5005:8080"
