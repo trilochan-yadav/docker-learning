@@ -46,10 +46,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: products-api
     ports:
       # Map host port 5000 → container port 8080
-      - "5000:8080"
+      - "5000-5005:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       # Override the connection string — "sqlserver" resolves via Docker DNS to the
