@@ -83,6 +83,8 @@ services:
       - "5341:80"
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_REQUIREFIRSTRUNPASSWORD: "false"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     volumes:
       # Named volume persists Seq's event store across container restarts
       - seqdata:/data

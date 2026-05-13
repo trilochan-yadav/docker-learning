@@ -1,0 +1,16 @@
+# Ignore build outputs and IDE artifacts
+**/bin/
+**/obj/
+*.user
+*.suo
+*.sln.docstates
+.vs/
+.vscode/
+
+# Ignore local NuGet and runtime artifacts
+.nuget/
+*.log
+
+# Ignore Dockerfiles copies and build scripts not needed in container
+Dockerfile.test
+docker-compose.override.yml
