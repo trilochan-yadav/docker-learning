@@ -6,6 +6,10 @@ A containerized **.NET 8 REST API** for Products CRUD and stock management, back
 
 https://hub.docker.com/r/trilochanrao/products-api
 
+## ✅ Docker cmd SS
+
+docs/DockerAssignmentSS
+
 ---
 
 ## Table of Contents
